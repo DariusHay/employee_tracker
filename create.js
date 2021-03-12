@@ -34,8 +34,17 @@ const employee = () => {
 });
 };
 
-connection.connect((err) => {
-    if (err) throw err;
-    console.log(`connected as id ${connection.threadId}`);
-   employee();
-});
+// connection.connect((err) => {
+//     if (err) throw err;
+//     console.log(`connected as id ${connection.threadId}`);
+//    employee();
+// });
+const afterConnection = () => {
+    connection.query('SELECT * FROM Department', (err, res) => {
+      if (err) throw err;
+      console.table(res);
+      connection.end();
+    });
+  };
+
+  afterConnection();
