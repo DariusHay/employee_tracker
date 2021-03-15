@@ -24,7 +24,8 @@ const start = () => {
                 'Add an Employee', 'Add a Department', 'Add an Employee Role',
                 'Delete an Employee', 'Delete a Department', 'Delete an Employee Role',
                 `Update an Employee's role`, `Update an Employee's Manager`, `View Employees by Manager`,
-                `View the total utilized budget of a Department`, 'EXIT'],
+                // `View the total utilized budget of a Department`, 
+                'EXIT'],
         })
         .then((answer) => {
             switch (answer.option) {
@@ -64,17 +65,14 @@ const start = () => {
                 case `View Employees by Manager`:
                     viewByManager();
                     break;
+                case `View the total utilized budget of a Department`:
+                    break;
                 default: process.exit();
 
             }
         })
 }
-//     connection.query('DELETE FROM Department WHERE id = 1', (err, res) => {
-//       if (err) throw err;
-//       console.table(res);
-//       connection.end();
-//     });
-//   };
+
 const viewEmployees = async () => {
     const employees = await connection.query('SELECT * FROM employee')
     console.table(employees);
@@ -90,10 +88,7 @@ const viewRoles = async () => {
     console.table(roles);
     start();
 }
-// const showEmployee = async () => {
-//     const newEmployee = await connection.query(`SELECT * FROM employee`)
-//     console.table(newEmployee);
-// };
+
 const addEmployee = async () => {
     // console.log('hello');
     const roleArray = [];
@@ -319,33 +314,33 @@ const updateManager = async () => {
         managerIds.push(id)
     });
     inquirer
-    .prompt([
-        {
-           name: 'update',
-           type: 'list',
-           message: 'Please choose an Employee to update their manager.',
-           choices: emps 
-        },
-        {
-            name: 'manager',
-            type: 'list',
-            message: `Please choose this Employee new manager's id.`,
-            choices: managerIds
-        }
-    ])
-    .then(answers => {
-        connection.query('UPDATE employee SET ? WHERE ?',
-            [
-                {
-                    manager_id: answers.manager
-                },
-                {
-                    first_name: answers.update
-                }
-            ]);
-        viewEmployees()
-        console.log(`${answers.update}'s new Manager has an id of ${answers.manager}.`);
-    })
+        .prompt([
+            {
+                name: 'update',
+                type: 'list',
+                message: 'Please choose an Employee to update their manager.',
+                choices: emps
+            },
+            {
+                name: 'manager',
+                type: 'list',
+                message: `Please choose this Employee new manager's id.`,
+                choices: managerIds
+            }
+        ])
+        .then(answers => {
+            connection.query('UPDATE employee SET ? WHERE ?',
+                [
+                    {
+                        manager_id: answers.manager
+                    },
+                    {
+                        first_name: answers.update
+                    }
+                ]);
+            viewEmployees()
+            console.log(`${answers.update}'s new Manager has an id of ${answers.manager}.`);
+        })
 
 }
 const viewByManager = async () => {
@@ -355,28 +350,25 @@ const viewByManager = async () => {
         managerIds.push(id)
     });
     inquirer
-    .prompt([
-        {
-            name: 'manager',
-            type: 'list',
-            message: `Please choose this Manager's id whose employees you would like to view.`,
-            choices: managerIds
-        }
-    ])
-    .then(answers => {
-        const managed = connection.query(`SELECT * FROM employee WHERE manager_id = ${answers.manager}`)
-        console.log(`These are the Employees of the Manager you chose.`);
-        console.table(managed);
-        start();
-    })
+        .prompt([
+            {
+                name: 'manager',
+                type: 'list',
+                message: `Please choose this Manager's id whose employees you would like to view.`,
+                choices: managerIds
+            }
+        ])
+        .then(answers => {
+            connection.query(`SELECT * FROM employee WHERE manager_id = ${answers.manager}`, (err, res) => {
+                if (err) throw err;
+                console.log(`These are the Employees of the Manager you chose.`);
+                console.table(res);
+                start();
+            })
+        })
 }
 
 connection.connect((err) => {
     if (err) throw err;
     start();
 });
-// AddEmployee();
-// genaerateChoices();
-// viewEmployees();
-// viewDepartments();
-// viewRoles();
