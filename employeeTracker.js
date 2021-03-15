@@ -52,6 +52,18 @@ const start = () => {
                 case `Update an Employee's role`:
                     updateRole();
                     break;
+                case 'Delete an Employee Role':
+                    deleteRole();
+                    break;
+                case 'Delete a Department':
+                    deleteDepartment();
+                    break;
+                case `Update an Employee's Manager`:
+                    updateManager();
+                    break;
+                case `View Employees by Manager`:
+                    viewByManager();
+                    break;
                 default: process.exit();
 
             }
@@ -211,6 +223,50 @@ const deleteEmployee = async () => {
             viewEmployees();
         })
 }
+const deleteRole = async () => {
+    const titles = [];
+    const roles = await connection.query(`SELECT * FROM role`)
+    roles.forEach(({ title }) => {
+        titles.push(title)
+    })
+
+    inquirer
+        .prompt({
+            name: 'delete',
+            type: 'list',
+            message: 'Which Employee role would you like to delete?',
+            choices: titles
+        })
+        .then(answer => {
+            connection.query('DELETE FROM role WHERE ?', {
+                title: answer.delete
+            });
+            console.log(`${answer.delete} is no longer an employee role in this company.`);
+            viewRoles();
+        })
+}
+const deleteDepartment = async () => {
+    const departments = [];
+    const department = await connection.query(`SELECT * FROM Department`)
+    department.forEach(({ name }) => {
+        departments.push(name)
+    })
+
+    inquirer
+        .prompt({
+            name: 'delete',
+            type: 'list',
+            message: 'Which Department would you like to delete?',
+            choices: departments
+        })
+        .then(answer => {
+            connection.query('DELETE FROM Department WHERE ?', {
+                name: answer.delete
+            });
+            console.log(`${answer.delete} is no longer a Department in this company.`);
+            viewRoles();
+        })
+}
 
 const updateRole = async () => {
     const roleArray = [];
@@ -251,6 +307,68 @@ const updateRole = async () => {
             viewEmployees()
             console.log(`${answers.employee}'s employee role id has been updated to ${answers.role}.`);
         })
+}
+const updateManager = async () => {
+    const emps = [];
+    const managerIds = [];
+    const employees = await connection.query(`SELECT * FROM employee`)
+    employees.forEach(({ first_name }) => {
+        emps.push(first_name)
+    })
+    employees.forEach(({ id }) => {
+        managerIds.push(id)
+    });
+    inquirer
+    .prompt([
+        {
+           name: 'update',
+           type: 'list',
+           message: 'Please choose an Employee to update their manager.',
+           choices: emps 
+        },
+        {
+            name: 'manager',
+            type: 'list',
+            message: `Please choose this Employee new manager's id.`,
+            choices: managerIds
+        }
+    ])
+    .then(answers => {
+        connection.query('UPDATE employee SET ? WHERE ?',
+            [
+                {
+                    manager_id: answers.manager
+                },
+                {
+                    first_name: answers.update
+                }
+            ]);
+        viewEmployees()
+        console.log(`${answers.update}'s new Manager has an id of ${answers.manager}.`);
+    })
+
+}
+const viewByManager = async () => {
+    const managerIds = [];
+    const employees = await connection.query(`SELECT * FROM employee`)
+    employees.forEach(({ id }) => {
+        managerIds.push(id)
+    });
+    inquirer
+    .prompt([
+        {
+            name: 'manager',
+            type: 'list',
+            message: `Please choose this Manager's id whose employees you would like to view.`,
+            choices: managerIds
+        }
+    ])
+    .then(answers => {
+        const managed = connection.query(`SELECT * FROM employee WHERE manager_id = ${answers.manager}`)
+        console.log(`These are the Employees of the Manager you chose.`);
+        console.table(managed);
+        start();
+    })
 }
 
 connection.connect((err) => {
